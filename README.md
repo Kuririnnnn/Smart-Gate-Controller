@@ -66,7 +66,7 @@ A custom [Blockly](https://developers.google.com/blockly) block called `open_gat
 3. Plug a **Number** block into the speed socket and enter a value (1–10)
 4. Click **Generate Code** — the output appears in the box below
 
-> 📷 **Screenshot to add:** The Blockly editor with the custom block connected to a number (e.g. 7), and the generated servo code visible in the output box below.
+<img width="914" height="854" alt="Image" src="https://github.com/user-attachments/assets/c8069b18-c696-422b-b059-86880ae20af7" />
 
 ---
 
