@@ -10,7 +10,7 @@ An ESP32-based automated barrier gate system that uses an ultrasonic sensor to d
 An embedded system simulated in [Wokwi](https://wokwi.com) using an ESP32, an HC-SR04 ultrasonic sensor, a servo motor, and an LED. The system continuously measures the distance in front of the gate. If a vehicle is detected within the threshold distance, the gate closes. When the vehicle leaves, a 5-second countdown begins — if no vehicle is detected during that window, the gate opens. An LED blinks whenever the gate is in motion.
 
 ### Logic
-- Vehicle detected (distance ≤ 15 cm) → gate sweeps to 0° (closed)
+- Vehicle detected (distance ≤ 100 cm) → gate sweeps to 0° (closed)
 - Vehicle gone → 5-second timer starts
 - If a vehicle reappears during the 5 seconds → timer resets, gate stays closed
 - After 5 seconds clear → gate sweeps to 90° (open)
@@ -73,10 +73,10 @@ A custom [Blockly](https://developers.google.com/blockly) block called `open_gat
 ## Part 3 — Site Management Dashboard
 
 ### Overview
-A browser-based dashboard that simulates the gate controller in real time. The "Live Feed" panel shows the current gate state with an animated barrier gate visual. A draggable sensor slider lets the user manually control the simulated distance reading — the gate responds exactly as the real ESP32 system would.
+A browser-based dashboard that simulates the gate controller in real time. The "Live Feed" panel shows the current gate state with an animated gate visual. A draggable sensor slider lets the user manually control the simulated distance reading — the gate responds exactly as the real ESP32 system would.
 
 ### Features
-- **Live Feed** — animated barrier gate that opens and closes with a smooth sweep transition
+- **Live Feed** — animated gate that opens and closes with a smooth sweep transition
 - **Sensor Reading** — draggable slider (1–400 cm) with a colour-coded distance bar; turns red when a vehicle is within 100 cm
 - **Gate State Panel** — shows current position, servo angle, last trigger time, and total event count
 - **Event Log** — timestamped log of every state change
@@ -99,14 +99,14 @@ A browser-based dashboard that simulates the gate controller in real time. The "
 
 ```
 smart-gate-controller/
-├── part1-wokwi/
+├── Part - 1: Wokwi/
 │   ├── sketch.ino
 │   └── diagram.json
-├── part2-blockly/
+├── Part - 2: Blockly/
 │   ├── index.html
 │   ├── open_gate_with_speed.js
 │   └── main.js
-├── part3-dashboard/
+├── Part - 3: Web Interface/
 │   └── dashboard.html
 └── README.md
 ```
