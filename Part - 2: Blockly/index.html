@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Gate Block</title>
+  <script src="https://unpkg.com/blockly@10/blockly.min.js"></script>
+</head>
+<body>
+  <h2>Gate Controller Blocks</h2>
+  <div id="blocklyDiv" style="height:400px; width:100%;"></div>
+  <br>
+  <button onclick="generateCode()">Generate Code</button>
+  <br><br>
+  <pre id="output" style="background:#f4f4f4; padding:12px; min-height:60px; border:1px solid #ccc;"></pre>
+
+  <script>
+    Blockly.Blocks['open_gate_with_speed'] = {
+      init: function () {
+        this.appendDummyInput()
+            .appendField('open gate at speed');
+        this.appendValueInput('SPEED')
+            .setCheck('Number');
+        this.setInputsInline(true);
+        this.setPreviousStatement(true, null);
+        this.setNextStatement(true, null);
+        this.setColour(160);
+        this.setTooltip('Opens the gate. Speed 1 (slow) to 10 (fast).');
+      }
+    };
+
+    Blockly.JavaScript.forBlock['open_gate_with_speed'] = function (block, generator) {
+      var speed = generator.valueToCode(block, 'SPEED', Blockly.JavaScript.ORDER_ATOMIC) || '5';
+      return '(function() {\n'
+           + '  var speed = Math.min(10, Math.max(1, ' + speed + '));\n'
+           + '  var stepDelay = Math.round(55 - speed * 5);\n'
+           + '  for (var angle = 0; angle <= 90; angle++) {\n'
+           + '    servo.write(angle);\n'
+           + '    delay(stepDelay);\n'
+           + '  }\n'
+           + '})();\n';
+    };
+
+    var workspace = Blockly.inject('blocklyDiv', {
+      toolbox: {
+        kind: 'flyoutToolbox',
+        contents: [
+          { kind: 'block', type: 'math_number' },
+          { kind: 'block', type: 'open_gate_with_speed' }
+        ]
+      }
+    });
+
+    function generateCode() {
+      try {
+        var code = Blockly.JavaScript.workspaceToCode(workspace);
+        document.getElementById('output').textContent =
+          code.trim() !== '' ? code : '(no blocks on canvas — drag one from the left panel)';
+      } catch (e) {
+        document.getElementById('output').textContent = 'ERROR: ' + e.message;
+      }
+    }
+  </script>
+</body>
+</html>
