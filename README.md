@@ -16,20 +16,6 @@ An embedded system simulated in [Wokwi](https://wokwi.com) using an ESP32, an HC
 - After 5 seconds clear → gate sweeps to 90° (open)
 - LED blinks during any gate movement
 
-### Pin Connections
-
-| Component     | ESP32 Pin | Wire Colour |
-|---------------|-----------|-------------|
-| HC-SR04 VCC   | VIN (5V)  | Red         |
-| HC-SR04 TRIG  | D5        | Green       |
-| HC-SR04 ECHO  | D18       | Yellow      |
-| HC-SR04 GND   | GND       | Black       |
-| Servo VCC     | VIN       | Red         |
-| Servo PWM     | D13       | Orange      |
-| Servo GND     | GND       | Black       |
-| LED Anode     | D4 → 220Ω | Purple      |
-| LED Cathode   | GND       | Black       |
-
 ### Files
 - `sketch.ino` — Arduino source code
 - `diagram.json` — Wokwi wiring diagram (import directly into Wokwi)
@@ -41,7 +27,7 @@ An embedded system simulated in [Wokwi](https://wokwi.com) using an ESP32, an HC
 4. Add `ESP32Servo` to `libraries.txt`
 5. Press the play button to start the simulation
 
-> 📷 **Screenshot to add:** The Wokwi simulator running — showing the circuit with the servo and sensor connected, ideally mid-simulation with the Serial Monitor open showing distance readings.
+<img width="841" height="613" alt="Image" src="https://github.com/user-attachments/assets/62f6102e-6603-4889-a595-08772ddfebaa" />
 
 ---
 
