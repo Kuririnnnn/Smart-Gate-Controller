@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Site Management Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
+    :root {
+      --bg:       #0b0f14;
+      --surface:  #111820;
+      --surface2: #161e28;
+      --border:   #1e2d3d;
+      --accent:   #00e5ff;
+      --accent2:  #0077ff;
+      --warn:     #ffb300;
+      --danger:   #ff3b5c;
+      --success:  #00e676;
+      --text:     #e0eaf5;
+      --muted:    #4a6278;
+      --fh:       'Syne', sans-serif;
+      --fm:       'DM Mono', monospace;
+    }
+    body { background:var(--bg); color:var(--text); font-family:var(--fh); min-height:100vh; padding:20px; }
+
+    /* ── Header ── */
+    .header { display:flex; justify-content:space-between; align-items:center; padding:16px 24px; border:1px solid var(--border); border-radius:10px; background:var(--surface); margin-bottom:12px; }
+    .header-left { display:flex; align-items:center; gap:14px; }
+    .logo-mark { width:36px; height:36px; border:2px solid var(--accent); border-radius:8px; position:relative; flex-shrink:0; }
+    .logo-mark::after { content:''; position:absolute; inset:5px; background:var(--accent); border-radius:3px; opacity:0.3; }
+    .site-name { font-size:13px; font-weight:700; letter-spacing:0.15em; color:var(--accent); }
+    .site-sub  { font-size:11px; color:var(--muted); letter-spacing:0.08em; margin-top:2px; }
+    .header-right { display:flex; align-items:center; gap:20px; }
+    .clock { font-family:var(--fm); font-size:18px; }
+    .uptime-wrap { display:flex; align-items:center; gap:8px; }
+    .uptime-label { font-size:10px; letter-spacing:0.12em; color:var(--muted); }
+    .uptime-val   { font-family:var(--fm); font-size:15px; color:var(--accent); }
+    .conn-indicator { display:flex; align-items:center; gap:6px; }
+    .conn-dot { width:8px; height:8px; border-radius:50%; background:var(--muted); box-shadow:none; transition:background .3s,box-shadow .3s; }
+    .conn-dot.live { background:var(--success); box-shadow:0 0 6px var(--success); animation:blink 2s ease-in-out infinite; }
+    .conn-label { font-size:11px; font-weight:600; letter-spacing:0.12em; color:var(--muted); transition:color .3s; }
+    .conn-label.live { color:var(--success); }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+    /* ── Main grid ── */
+    .main-grid { display:grid; grid-template-columns:1fr 340px; gap:12px; align-items:start; }
+
+    /* ── Panels ── */
+    .panel { background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:20px; }
+    .panel-title { font-size:10px; letter-spacing:0.14em; color:var(--muted); margin-bottom:16px; text-transform:uppercase; }
+    .panel-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; }
+    .pulse-ring { width:12px; height:12px; border-radius:50%; background:var(--muted); transition:background .3s; }
+    .pulse-ring.live { background:var(--accent); animation:pulse 2.5s ease-out infinite; }
+    @keyframes pulse { 0%{box-shadow:0 0 0 0 rgba(0,229,255,.6)} 70%{box-shadow:0 0 0 10px rgba(0,229,255,0)} 100%{box-shadow:0 0 0 0 rgba(0,229,255,0)} }
+
+    /* ── Gate visual ── */
+    .gate-visual { display:flex; flex-direction:column; align-items:center; margin:30px 0 24px; gap:10px; }
+
+    /*
+      Clipper = 340×420px with overflow:hidden — hard clips everything.
+      Left post:  left:20px, width:12px → right edge at 32px
+      Right post: right:20px, width:12px → left edge at 308px
+      Bar pivot = 32px from left, bottom = 120px (top of post)
+      Bar width = 276px (post-to-post)
+      At -85deg: tip rises 276*sin(85)=274.9px above pivot → 394.9px from bottom.
+      Clipper height 420px gives 25px clearance above tip. Fully visible.
+    */
+    .gate-clipper {
+      width:340px; height:420px;
+      overflow:hidden; position:relative;
+      border:1px solid var(--border); border-radius:6px;
+      background:var(--surface2);
+    }
+    .gate-frame { position:absolute; inset:0; }
+    .gate-post  { position:absolute; bottom:0; width:12px; height:120px; background:var(--border); border-radius:4px 4px 0 0; }
+    .gate-post.left  { left:20px; }
+    .gate-post.right { right:20px; }
+    .ground-line { position:absolute; bottom:0; left:0; right:0; height:2px; background:var(--border); }
+    .gate-bar {
+      position:absolute; bottom:120px; left:32px;
+      width:276px; height:10px;
+      background:var(--accent2); border-radius:5px;
+      transform-origin:left center; transform:rotate(0deg);
+      transition:transform 2s ease-in-out;
+      box-shadow:0 0 12px rgba(0,119,255,.6);
+    }
+    .gate-bar.open { transform:rotate(-85deg); }
+    .gate-angle-label { font-family:var(--fm); font-size:12px; color:var(--muted); }
+
+    /* ── Status badge ── */
+    .status-badge-wrap { display:flex; justify-content:center; margin-bottom:20px; }
+    .status-badge { display:inline-flex; align-items:center; gap:10px; padding:10px 24px; border-radius:100px; border:1px solid var(--border); background:var(--surface2); transition:all .4s; }
+    .status-badge.closed  { border-color:var(--muted); }
+    .status-badge.opening { border-color:var(--warn);    background:rgba(255,179,0,.08); }
+    .status-badge.open    { border-color:var(--success); background:rgba(0,230,118,.08); }
+    .badge-dot { width:10px; height:10px; border-radius:50%; background:var(--muted); flex-shrink:0; transition:background .4s,box-shadow .4s; }
+    .status-badge.opening .badge-dot { background:var(--warn);    box-shadow:0 0 8px var(--warn);    animation:blink .6s ease-in-out infinite; }
+    .status-badge.open    .badge-dot { background:var(--success); box-shadow:0 0 8px var(--success); }
+    .badge-text { font-size:13px; font-weight:600; letter-spacing:0.12em; color:var(--muted); transition:color .4s; }
+    .status-badge.opening .badge-text { color:var(--warn); }
+    .status-badge.open    .badge-text { color:var(--success); }
+
+    /* ── Start/Stop button ── */
+    .btn-start {
+      width:100%; padding:13px; border:none; border-radius:8px;
+      font-family:var(--fh); font-size:11px; font-weight:700; letter-spacing:0.12em;
+      cursor:pointer; transition:background .2s, transform .1s;
+      background:var(--accent2); color:#fff;
+    }
+    .btn-start.running { background:#1a2a1a; color:var(--danger); border:1px solid var(--danger); }
+    .btn-start:active { transform:scale(0.98); }
+
+    /* ── Side panels ── */
+    .side-panels { display:flex; flex-direction:column; gap:12px; }
+    .sensor-distance { display:flex; align-items:baseline; gap:6px; margin-bottom:14px; }
+    .dist-value { font-family:var(--fm); font-size:36px; font-weight:500; color:var(--text); line-height:1; transition:color .3s; }
+    .dist-value.danger { color:var(--danger); }
+    .dist-unit { font-family:var(--fm); font-size:14px; color:var(--muted); }
+
+    /* ── Draggable slider ── */
+    .slider-wrap { margin-bottom:8px; }
+    .dist-slider {
+      -webkit-appearance:none; appearance:none;
+      width:100%; height:6px; border-radius:3px; outline:none;
+      background:var(--surface2); border:1px solid var(--border);
+      cursor:pointer; transition:opacity .3s;
+    }
+    .dist-slider:disabled { opacity:0.3; cursor:not-allowed; }
+    .dist-slider::-webkit-slider-thumb {
+      -webkit-appearance:none; appearance:none;
+      width:16px; height:16px; border-radius:50%;
+      background:var(--accent2); border:2px solid var(--accent);
+      cursor:pointer; box-shadow:0 0 6px rgba(0,119,255,.5);
+    }
+    .dist-slider::-moz-range-thumb {
+      width:16px; height:16px; border-radius:50%;
+      background:var(--accent2); border:2px solid var(--accent);
+      cursor:pointer;
+    }
+    .slider-labels { display:flex; justify-content:space-between; font-family:var(--fm); font-size:9px; color:var(--muted); margin-top:5px; margin-bottom:10px; }
+    .sensor-status { font-size:12px; color:var(--muted); }
+    .sensor-status.vehicle { color:var(--danger); }
+
+    /* ── Log ── */
+    .log-list { max-height:160px; overflow-y:auto; display:flex; flex-direction:column; gap:6px; }
+    .log-list::-webkit-scrollbar { width:4px; }
+    .log-list::-webkit-scrollbar-thumb { background:var(--border); border-radius:2px; }
+    .log-entry { display:flex; gap:10px; align-items:baseline; padding:6px 8px; border-radius:5px; background:var(--surface2); border-left:2px solid transparent; animation:fadeIn .3s ease; }
+    @keyframes fadeIn { from{opacity:0;transform:translateY(-4px)} to{opacity:1;transform:none} }
+    .log-entry.log-info    { border-left-color:var(--accent2); }
+    .log-entry.log-warn    { border-left-color:var(--warn); }
+    .log-entry.log-success { border-left-color:var(--success); }
+    .log-entry.log-danger  { border-left-color:var(--danger); }
+    .log-time { font-family:var(--fm); font-size:10px; color:var(--muted); flex-shrink:0; }
+    .log-msg  { color:var(--text); font-size:11px; }
+
+    /* ── State grid ── */
+    .state-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+    .state-item { background:var(--surface2); border:1px solid var(--border); border-radius:7px; padding:10px 12px; }
+    .state-label { font-size:9px; letter-spacing:0.1em; color:var(--muted); margin-bottom:4px; }
+    .state-val { font-size:13px; font-weight:600; color:var(--text); }
+    .state-val.mono { font-family:var(--fm); font-weight:400; }
+  </style>
+</head>
+<body>
+<div class="dashboard">
+
+  <!-- Header: logo + uptime + live indicator -->
+  <header class="header">
+    <div class="header-left">
+      <div class="logo-mark"></div>
+      <div>
+        <div class="site-name">SENTRI GATE SYSTEMS</div>
+        <div class="site-sub">Site Management Dashboard</div>
+      </div>
+    </div>
+    <div class="header-right">
+      <div class="uptime-wrap">
+        <span class="uptime-label">SIMULATION UPTIME</span>
+        <span class="uptime-val" id="uptime">00:00:00</span>
+      </div>
+      <div class="clock" id="clock">--:--:--</div>
+      <div class="conn-indicator">
+        <span class="conn-dot" id="connDot"></span>
+        <span class="conn-label" id="connLabel">IDLE</span>
+      </div>
+    </div>
+  </header>
+
+  <div class="main-grid">
+
+    <!-- Live Feed -->
+    <div class="panel panel-main">
+      <div class="panel-header">
+        <span class="panel-title">Live Feed</span>
+        <span class="pulse-ring" id="pulseRing"></span>
+      </div>
+
+      <div class="gate-visual">
+        <div class="gate-clipper">
+          <div class="gate-frame">
+            <div class="gate-bar" id="gateBar"></div>
+            <div class="gate-post left"></div>
+            <div class="gate-post right"></div>
+            <div class="ground-line"></div>
+          </div>
+        </div>
+        <div class="gate-angle-label" id="gateAngleLabel">0°</div>
+      </div>
+
+      <div class="status-badge-wrap">
+        <div class="status-badge closed" id="statusBadge">
+          <span class="badge-dot"></span>
+          <span class="badge-text" id="badgeText">GATE CLOSED</span>
+        </div>
+      </div>
+
+      <button class="btn-start" id="startBtn" onclick="toggleSim()">START SIMULATION</button>
+    </div>
+
+    <!-- Side panels -->
+    <div class="side-panels">
+
+      <!-- Sensor reading with draggable slider -->
+      <div class="panel panel-sensor">
+        <div class="panel-title">Sensor Reading</div>
+        <div class="sensor-distance">
+          <span class="dist-value" id="distValue">400</span>
+          <span class="dist-unit">cm</span>
+        </div>
+        <div class="slider-wrap">
+          <input type="range" class="dist-slider" id="distSlider"
+                 min="1" max="400" value="400" disabled
+                 oninput="onSliderMove(this.value)">
+          <div class="slider-labels">
+            <span>1 cm</span><span>← drag to set distance →</span><span>400 cm</span>
+          </div>
+        </div>
+        <div class="sensor-status" id="sensorStatus">Simulation not running</div>
+      </div>
+
+      <!-- Event log -->
+      <div class="panel panel-log">
+        <div class="panel-title">Event Log</div>
+        <div class="log-list" id="logList">
+          <div class="log-entry log-info">
+            <span class="log-time" id="initTime">--:--:--</span>
+            <span class="log-msg">System ready — press Start Simulation</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Gate state -->
+      <div class="panel panel-state">
+        <div class="panel-title">Gate State</div>
+        <div class="state-grid">
+          <div class="state-item"><div class="state-label">Position</div><div class="state-val" id="statePosition">CLOSED</div></div>
+          <div class="state-item"><div class="state-label">Servo angle</div><div class="state-val mono" id="stateAngle">0°</div></div>
+          <div class="state-item"><div class="state-label">Last event</div><div class="state-val mono" id="stateLastTrigger">—</div></div>
+          <div class="state-item"><div class="state-label">Total events</div><div class="state-val mono" id="stateEvents">0</div></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+  var sim = {
+    running:     false,
+    startTime:   null,
+    uptimeTick:  null,
+    gateOpen:    false,
+    gateMoving:  false,
+    waitTimer:   null,
+    eventCount:  0
+  };
+  var prevVehicle = false;
+  var angleAnim   = null;
+
+  function pad(n) { return String(n).padStart(2,'0'); }
+  function fmt(d) { return pad(d.getHours())+':'+pad(d.getMinutes())+':'+pad(d.getSeconds()); }
+
+  function addLog(msg, type) {
+    var list = document.getElementById('logList');
+    var el   = document.createElement('div');
+    el.className = 'log-entry log-'+(type||'info');
+    el.innerHTML = '<span class="log-time">'+fmt(new Date())+'</span>'
+                 + '<span class="log-msg">'+msg+'</span>';
+    list.insertBefore(el, list.firstChild);
+    while (list.children.length > 40) list.removeChild(list.lastChild);
+  }
+
+  function setStatus(mode) {
+    document.getElementById('statusBadge').className = 'status-badge '+mode;
+    document.getElementById('badgeText').textContent = {
+      closed:  'GATE CLOSED',
+      opening: 'GATE OPENING...',
+      open:    'GATE OPEN',
+      closing: 'GATE CLOSING...'
+    }[mode] || mode;
+  }
+
+  function updateSensorUI(cm) {
+    var isVehicle = cm <= 100;
+    document.getElementById('distValue').textContent = cm;
+    document.getElementById('distValue').classList.toggle('danger', isVehicle);
+    var pct   = ((cm - 1) / 399) * 100;
+    var color = isVehicle ? '#ff3b5c' : '#0077ff';
+    document.getElementById('distSlider').style.background =
+      'linear-gradient(to right,'+color+' '+pct+'%,var(--surface2) '+pct+'%)';
+    document.getElementById('sensorStatus').textContent =
+      isVehicle ? 'Vehicle detected!' : 'No vehicle — area clear';
+    document.getElementById('sensorStatus').classList.toggle('vehicle', isVehicle);
+  }
+
+  function animateAngle(from, to, ms, done) {
+    if (angleAnim) cancelAnimationFrame(angleAnim);
+    var start = null;
+    function step(ts) {
+      if (!start) start = ts;
+      var p = Math.min((ts - start) / ms, 1);
+      var e = p < 0.5 ? 2*p*p : 1 - Math.pow(-2*p+2, 2)/2;
+      var a = Math.round(from + (to - from) * e);
+      document.getElementById('gateAngleLabel').textContent = a + '°';
+      document.getElementById('stateAngle').textContent = a + '°';
+      if (p < 1) { angleAnim = requestAnimationFrame(step); }
+      else { angleAnim = null; if (done) done(); }
+    }
+    angleAnim = requestAnimationFrame(step);
+  }
+
+  function openGate() {
+    if (sim.gateOpen || sim.gateMoving) return;
+    sim.gateMoving = true;
+    sim.eventCount++;
+    document.getElementById('stateEvents').textContent = sim.eventCount;
+    document.getElementById('stateLastTrigger').textContent = fmt(new Date());
+    document.getElementById('statePosition').textContent = 'OPENING';
+    document.getElementById('gateBar').classList.add('open');
+    setStatus('opening');
+    addLog('Gate opening — area clear for 5 s', 'warn');
+    animateAngle(0, 90, 2000, function() {
+      sim.gateOpen   = true;
+      sim.gateMoving = false;
+      document.getElementById('statePosition').textContent = 'OPEN';
+      setStatus('open');
+      addLog('Gate fully open at 90°', 'success');
+    });
+  }
+
+  function closeGate() {
+    if (sim.gateMoving) {
+      if (angleAnim) { cancelAnimationFrame(angleAnim); angleAnim = null; }
+      sim.gateMoving = false;
+    }
+    if (!sim.gateOpen) {
+      document.getElementById('gateBar').classList.remove('open');
+      document.getElementById('statePosition').textContent = 'CLOSED';
+      setStatus('closed');
+      return;
+    }
+    sim.gateOpen   = false;
+    sim.gateMoving = true;
+    sim.eventCount++;
+    document.getElementById('stateEvents').textContent = sim.eventCount;
+    document.getElementById('stateLastTrigger').textContent = fmt(new Date());
+    document.getElementById('statePosition').textContent = 'CLOSING';
+    document.getElementById('gateBar').classList.remove('open');
+    setStatus('closing');
+    addLog('Vehicle detected — gate closing', 'danger');
+    animateAngle(90, 0, 2000, function() {
+      sim.gateMoving = false;
+      document.getElementById('statePosition').textContent = 'CLOSED';
+      setStatus('closed');
+      addLog('Gate closed', 'success');
+    });
+  }
+
+  function onSliderMove(val) {
+    if (!sim.running) return;
+    var cm        = parseInt(val);
+    var isVehicle = cm <= 100;
+    updateSensorUI(cm);
+
+    if (isVehicle && !prevVehicle) {
+      prevVehicle = true;
+      if (sim.waitTimer) { clearTimeout(sim.waitTimer); sim.waitTimer = null; addLog('Wait timer cancelled — vehicle detected', 'warn'); }
+      if (!sim.gateOpen && !sim.gateMoving) {
+        addLog('Vehicle detected ('+cm+' cm) — gate remains closed', 'danger');
+      } else {
+        closeGate();
+      }
+
+    } else if (!isVehicle && prevVehicle) {
+      prevVehicle = false;
+      if (sim.waitTimer) clearTimeout(sim.waitTimer);
+      addLog('Area clear ('+cm+' cm) — waiting 5 s to open', 'info');
+      sim.waitTimer = setTimeout(function() {
+        sim.waitTimer = null;
+        openGate();
+      }, 5000);
+    }
+  }
+
+  function toggleSim() {
+    if (!sim.running) startSim(); else stopSim();
+  }
+
+  function startSim() {
+    sim.running    = true;
+    sim.startTime  = Date.now();
+    sim.gateOpen   = true;
+    sim.gateMoving = false;
+    sim.waitTimer  = null;
+    sim.eventCount = 0;
+    prevVehicle    = false;
+
+    document.getElementById('stateEvents').textContent       = '0';
+    document.getElementById('stateLastTrigger').textContent  = '—';
+
+    var slider = document.getElementById('distSlider');
+    slider.disabled = false;
+    slider.value    = 400;
+    updateSensorUI(400);
+
+    document.getElementById('startBtn').textContent = 'STOP SIMULATION';
+    document.getElementById('startBtn').classList.add('running');
+    document.getElementById('connDot').classList.add('live');
+    document.getElementById('connLabel').classList.add('live');
+    document.getElementById('connLabel').textContent = 'LIVE';
+    document.getElementById('pulseRing').classList.add('live');
+
+    if (angleAnim) { cancelAnimationFrame(angleAnim); angleAnim = null; }
+    document.getElementById('gateBar').classList.add('open');
+    document.getElementById('gateAngleLabel').textContent = '90°';
+    document.getElementById('stateAngle').textContent     = '90°';
+    document.getElementById('statePosition').textContent  = 'OPEN';
+    setStatus('open');
+
+    document.getElementById('uptime').textContent = '00:00:00';
+    sim.uptimeTick = setInterval(function() {
+      var e = Math.floor((Date.now() - sim.startTime) / 1000);
+      document.getElementById('uptime').textContent =
+        pad(Math.floor(e/3600))+':'+pad(Math.floor((e%3600)/60))+':'+pad(e%60);
+    }, 1000);
+
+    addLog('Simulation started — gate open, drag slider to detect vehicle', 'success');
+  }
+
+  function stopSim() {
+    sim.running = false;
+    clearInterval(sim.uptimeTick);
+    if (sim.waitTimer) { clearTimeout(sim.waitTimer); sim.waitTimer = null; }
+
+    document.getElementById('distSlider').disabled = true;
+    document.getElementById('startBtn').textContent = 'START SIMULATION';
+    document.getElementById('startBtn').classList.remove('running');
+    document.getElementById('connDot').classList.remove('live');
+    document.getElementById('connLabel').classList.remove('live');
+    document.getElementById('connLabel').textContent = 'IDLE';
+    document.getElementById('pulseRing').classList.remove('live');
+    document.getElementById('sensorStatus').textContent = 'Simulation not running';
+    document.getElementById('sensorStatus').classList.remove('vehicle');
+
+    addLog('Simulation stopped', 'warn');
+  }
+
+  document.getElementById('initTime').textContent = fmt(new Date());
+  setInterval(function() {
+    document.getElementById('clock').textContent = fmt(new Date());
+  }, 1000);
+  document.getElementById('clock').textContent = fmt(new Date());
+
+  setStatus('closed');
+  updateSensorUI(400);
+  document.getElementById('distSlider').value = 400;
+</script>
+</body>
+</html>
