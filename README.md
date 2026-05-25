@@ -1,6 +1,6 @@
 # Smart Gate Controller
 
-An ESP32-based automated barrier gate system that uses an ultrasonic sensor to detect vehicles and control a servo motor gate. Built across three parts: embedded hardware simulation, a visual programming block, and a live web dashboard.
+An ESP32-based automated gate system that uses an ultrasonic sensor to detect vehicles and control a servo motor gate. Built across three parts: embedded hardware simulation, a visual programming block, and a live web dashboard.
 
 ---
 
@@ -9,31 +9,6 @@ An ESP32-based automated barrier gate system that uses an ultrasonic sensor to d
 ### Overview
 An embedded system simulated in [Wokwi](https://wokwi.com) using an ESP32, an HC-SR04 ultrasonic sensor, a servo motor, and an LED. The system continuously measures the distance in front of the gate. If a vehicle is detected within the threshold distance, the gate closes. When the vehicle leaves, a 5-second countdown begins — if no vehicle is detected during that window, the gate opens. An LED blinks whenever the gate is in motion.
 
-### Logic
-- Vehicle detected (distance ≤ 15 cm) → gate sweeps to 0° (closed)
-- Vehicle gone → 5-second timer starts
-- If a vehicle reappears during the 5 seconds → timer resets, gate stays closed
-- After 5 seconds clear → gate sweeps to 90° (open)
-- LED blinks during any gate movement
-
-### Pin Connections
-
-| Component     | ESP32 Pin | Wire Colour |
-|---------------|-----------|-------------|
-| HC-SR04 VCC   | VIN (5V)  | Red         |
-| HC-SR04 TRIG  | D5        | Green       |
-| HC-SR04 ECHO  | D18       | Yellow      |
-| HC-SR04 GND   | GND       | Black       |
-| Servo VCC     | VIN       | Red         |
-| Servo PWM     | D13       | Orange      |
-| Servo GND     | GND       | Black       |
-| LED Anode     | D4 → 220Ω | Purple      |
-| LED Cathode   | GND       | Black       |
-
-### Files
-- `sketch.ino` — Arduino source code
-- `diagram.json` — Wokwi wiring diagram (import directly into Wokwi)
-
 ### How to Run
 1. Go to [wokwi.com](https://wokwi.com) and create a new ESP32 project
 2. Replace the default `sketch.ino` with the one in this folder
@@ -41,7 +16,7 @@ An embedded system simulated in [Wokwi](https://wokwi.com) using an ESP32, an HC
 4. Add `ESP32Servo` to `libraries.txt`
 5. Press the play button to start the simulation
 
-> 📷 **Screenshot to add:** The Wokwi simulator running — showing the circuit with the servo and sensor connected, ideally mid-simulation with the Serial Monitor open showing distance readings.
+https://github.com/Kuririnnnn/Smart-Gate-Controller/issues/1#issue-4515693739
 
 ---
 
