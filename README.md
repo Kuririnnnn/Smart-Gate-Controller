@@ -91,9 +91,7 @@ A browser-based dashboard that simulates the gate controller in real time. The "
 ### Files
 - `dashboard.html` — single self-contained file with all HTML, CSS, and JavaScript inline. Open directly in any browser, no server or dependencies required.
 
-> 📷 **Screenshot to add 1:** Dashboard with the gate open (slider at high distance, green "Gate Open" badge visible).
-> 
-> 📷 **Screenshot to add 2:** Dashboard with the gate closed (slider dragged to low distance, red vehicle detected indicator, "Gate Closed" badge).
+<img width="1905" height="959" alt="Image" src="https://github.com/user-attachments/assets/02500fa6-8792-47d2-878c-5bcff2696b9f" />
 
 ---
 
