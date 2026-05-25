@@ -16,7 +16,7 @@ An embedded system simulated in [Wokwi](https://wokwi.com) using an ESP32, an HC
 4. Add `ESP32Servo` to `libraries.txt`
 5. Press the play button to start the simulation
 
-https://github.com/Kuririnnnn/Smart-Gate-Controller/issues/1#issue-4515693739
+<img width="841" height="613" alt="Image" src="https://github.com/user-attachments/assets/62f6102e-6603-4889-a595-08772ddfebaa" />
 
 ---
 
